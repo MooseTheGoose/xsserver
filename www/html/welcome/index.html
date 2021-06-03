@@ -1,0 +1,45 @@
+<html>
+  <head>
+    <title>Welcome to XSServer</title>
+    <style>
+      p {
+        max-width: 400px;
+      }
+      label {
+        min-width: 100px;
+        display: inline-block;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Welcome to XSServer</h1>
+    <p>
+      XSServer is a site which you can
+      use to quickly intercept HTTP
+      requests and save to files
+    </p>
+    <br />
+    <p>
+      Log in with username and password
+    </p>
+    <form action="/login" method="POST">
+      <label for="username">Username:</label>
+      <input type="text" name="username" />
+      <br />
+      <label for="password">Password: </label>
+      <input type="text" name="password" />
+      <br />
+      <input type="submit" value="Log In" />
+    </form>
+    <br />
+    <p>
+      Sign up by entering your email address.
+    </p>
+    <form action="/signup" method="POST">
+      <label for="email">Email:</label>
+      <input type="text" name="email" />
+      <br />
+      <input type="submit" value="Sign Up" />
+    </form>
+  </body>
+</html>
