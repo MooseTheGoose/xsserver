@@ -25,6 +25,17 @@ namespace XSServer
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+
+            // Enable all origins to access API from browser.
+            services.AddCors(options => 
+            {
+                options.AddDefaultPolicy(
+                    builder => 
+                    {
+                        builder.WithOrigins("*");
+                    });
+            });
+
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {
@@ -43,6 +54,10 @@ namespace XSServer
             }
 
             app.UseRouting();
+
+            // Enable CORS policy in ConfigureServices
+            app.UseCors();
+
 
             app.UseAuthorization();
 

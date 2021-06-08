@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "Pbw0kzT0cAZQl9Bmevwf6EiNmYYsMQX40EZJC5Z1RhsH007uxJr0Jc3Eh0r4NivrOd1KsoWBx8JEToOXmXfBDw==",
+  "dgSpecHash": "IM3pxEvszLyA9HmyuSqiWQmcfuSXkIx/bCpZF8/waTPSNpUIefVc0vTlJN7JTzQYhLJzaEeeKo06CZ++4jbhKA==",
   "success": true,
-  "projectFilePath": "D:\\xsserver\\XSServer\\XSServer.csproj",
+  "projectFilePath": "D:\\xsserver_stable\\XSServer\\XSServer.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Administrator\\.nuget\\packages\\microsoft.extensions.apidescription.server\\3.0.0\\microsoft.extensions.apidescription.server.3.0.0.nupkg.sha512",
     "C:\\Users\\Administrator\\.nuget\\packages\\microsoft.openapi\\1.2.3\\microsoft.openapi.1.2.3.nupkg.sha512",

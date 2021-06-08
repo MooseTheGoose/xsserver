@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "D:\\xsserver\\XSServer\\XSServer.csproj": {}
+    "D:\\xsserver_stable\\XSServer\\XSServer.csproj": {}
   },
   "projects": {
-    "D:\\xsserver\\XSServer\\XSServer.csproj": {
+    "D:\\xsserver_stable\\XSServer\\XSServer.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\xsserver\\XSServer\\XSServer.csproj",
+        "projectUniqueName": "D:\\xsserver_stable\\XSServer\\XSServer.csproj",
         "projectName": "XSServer",
-        "projectPath": "D:\\xsserver\\XSServer\\XSServer.csproj",
+        "projectPath": "D:\\xsserver_stable\\XSServer\\XSServer.csproj",
         "packagesPath": "C:\\Users\\Administrator\\.nuget\\packages\\",
-        "outputPath": "D:\\xsserver\\XSServer\\obj\\",
+        "outputPath": "D:\\xsserver_stable\\XSServer\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\Administrator\\AppData\\Roaming\\NuGet\\NuGet.Config"

@@ -17,19 +17,28 @@ namespace XSServer.Controllers {
     private const int TimeOverflowMask = int.MaxValue;
     private const int TimeOverflow = 0xFFFFF;
 
-    public static string ExtractKey(string payload) {
+    public static bool TryExtractKey(string payload, out string key, out byte[] error) {
       MatchCollection mc = hexregex.Matches(payload);
-      string key = null;
+      bool success = false;
+      key = null;
+      error = null;
       if(mc.Count != 0) {
         GroupCollection gc = mc[0].Groups;
         key = gc[gc.Count - 1].Value.ToUpper();
+        if(key.Length <= MaxKeyLen) {
+          success = true;
+        } else {
+	  error = Encoding.ASCII.GetBytes("Key is too long  (Max length is " + MaxKeyLen + " characters)\n");
+	}
+      } else {
+        error = Encoding.ASCII.GetBytes("Key does not match hexstring regex: " + hexregex.ToString() + "\n");
       }
-      return key;
+      return success;
     }
 
-    public static async Task PollXSServiceFuture(XSServiceData data, int milliseconds) {
+    public static async Task PollXSServiceFuture(XSServiceData data, int milliseconds, Func<byte[], byte[]> mapping) {
       using(Timer futurepoll = new Timer(milliseconds)) {
-	Task future = new Task(async () => await data.DequeueMessages()); 
+	Task future = new Task(async () => await data.DequeueMessages(mapping)); 
 	futurepoll.Elapsed += (Object source, ElapsedEventArgs e) => {
 	  future.Start(); 
 	};

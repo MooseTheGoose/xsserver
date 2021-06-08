@@ -1,0 +1,45 @@
+<html>
+  <head>
+    <title>Welcome to XSServer!</title>
+    <style>
+      h1 { text-align: center; }
+      p { max-width: 50%; }
+    </style>
+  </head>
+  <body>
+    <h1>Welcome to XSServer</h1>
+    <hr />
+    <h2>What is XSServer?</h2>
+    <p>
+      XSServer is an easy-to-use web API for serverless
+      cross site scripting. This API is a response
+      to seeing cross site scripting challenges in cybersecurity
+      CTFs, but having no quick and easy serverless tools. I hope
+      this tool helps people in similar situations as well as people
+      who want easy cross site scripting for other ethical
+      reasons.
+    </p>
+    <p>
+      This is a very young project whose interface is not stable yet.
+      Don't make applications you expect to use without changing or you expect other
+      people to use which involve XSServer.
+    </p>
+    <h2>Quick How-To</h2>
+<pre>
+(curl -d '{"key": "deadbeef"}' -H 'Content-Type: application/json' -X POST 'http://www.xsserver.org/poll' | base64 -d &amp;)
+curl -d 'Hello, World' -H 'Content-Type: application/octet-stream' -X POST 'http://www.xsserver.org/message?key=deadbeef'</pre>
+    <p>
+      The output from the above commands should echo back "Hello, World" in the command line (albeit in a weird way).
+      They also must be done fairly quickly, as the endpoint uses long polling.
+    </p>
+    <p> 
+      There will be more endpoints which include Websockets and Server-Sent Events.
+      The object sent to such endpoints may also have optional fields. What those fields are
+      is to be determined.
+    </p>
+    <h2>Links</h2>
+    <ul>
+      <li><a href="http://github.com/MooseTheGoose/xsserver">XSServer Github Link</a></li>
+    </ul>
+  </body>
+</html>

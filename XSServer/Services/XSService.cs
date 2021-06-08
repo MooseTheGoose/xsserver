@@ -24,12 +24,10 @@ namespace XSServer.Services {
       queuedMessages.Enqueue(msg);
     }
 
-    public async Task DequeueMessages() {
+    public async Task DequeueMessages(Func<byte[], byte[]> messageMapping) {
       byte[] curr;
       while(queuedMessages.TryDequeue(out curr)) {
-	string b64msg = Convert.ToBase64String(curr);
-	await response.Body.WriteAsync(
-	  Encoding.ASCII.GetBytes(String.Format("event: message\ndata: {0}\n\n", b64msg)));
+	await response.Body.WriteAsync(messageMapping(curr));
 	Timestamp = Environment.TickCount;
       }
       await response.Body.FlushAsync();

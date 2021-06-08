@@ -1,7 +1,7 @@
 using System;
-using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.Extensions.Logging;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -11,34 +11,45 @@ using XSServer.Services;
 using XSServer.Models;
 
 namespace XSServer.Controllers {
+  [EnableCors]
   [ApiController]
   [Route("[controller]")]
   public class PollController : ControllerBase {
-    private readonly ILogger<WeatherForecastController> _logger;
+    private readonly ILogger<PollController> _logger;
     private const int MaxPollTimeMs = 5000;
 
-    public PollController(ILogger<WeatherForecastController> logger) {
+    public PollController(ILogger<PollController> logger) {
       _logger = logger;
     }
 
-    [HttpPost("sub")]
+    public byte[] PollMessageMapping(byte[] message) {
+      return Encoding.ASCII.GetBytes(Convert.ToBase64String(message) + "\n");
+    }
+
+    [HttpPost()]
     public async Task Subscribe([FromBody]XSSubscriber sub) {
-      sub.Key = ControllerUtilities.ExtractKey(sub.Key);
-      if(sub.Key == null || sub.Key.Length > ControllerUtilities.MaxKeyLen) {
-        return;
-      }
-      XSServiceData data = XSService.Subscribe(Response, sub);
-      try {
-	int datatime = data.Timestamp;
-	int timestamp = datatime;
-	await data.DequeueMessages();
-	while(data.Timestamp == datatime && ControllerUtilities.TimeAbsDifference(timestamp, datatime) < MaxPollTimeMs) {
-	  await ControllerUtilities.PollXSServiceFuture(data, 100);
-	  timestamp = Environment.TickCount;
-	}
-        XSService.Unsubscribe(data);
-      } catch {
-        XSService.Unsubscribe(data);
+      string key = null;
+      byte[] error = null;
+      sub.Key ??= "";
+      if(! ControllerUtilities.TryExtractKey(sub.Key, out key, out error)) {
+        Response.StatusCode = 400;
+	await Response.Body.WriteAsync(error);
+        await Response.Body.FlushAsync();
+      } else {
+        sub.Key = key;
+        XSServiceData data = XSService.Subscribe(Response, sub);
+        try {
+          int datatime = data.Timestamp;
+          int timestamp = datatime;
+          await data.DequeueMessages(PollMessageMapping);
+          while(data.Timestamp == datatime && ControllerUtilities.TimeAbsDifference(timestamp, datatime) < MaxPollTimeMs) {
+            await ControllerUtilities.PollXSServiceFuture(data, 100, PollMessageMapping);
+            timestamp = Environment.TickCount;
+          }
+          XSService.Unsubscribe(data);
+        } catch {
+          XSService.Unsubscribe(data);
+        }
       }
     }
 
@@ -52,20 +63,5 @@ namespace XSServer.Controllers {
       };
     }
 
-
-    [HttpPost("message")]
-    public async Task Message([FromQuery] string key) {
-      key = ControllerUtilities.ExtractKey(key);
-      if(key == null || key.Length > ControllerUtilities.MaxKeyLen) {
-        return;
-      }
-      if(Request.ContentLength >= 65536) {
-        return;
-      }
-      byte[] message = new byte[(int)Request.ContentLength];
-      await Request.Body.ReadAsync(message, 0, message.Length);
-      Response.Headers.Add("Access-Control-Allow-Origin", "*");
-      await Task.Run(() => XSService.SendMessage(message, key)); 
-    }
   }
 }
