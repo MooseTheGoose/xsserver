@@ -37,6 +37,13 @@ curl -d 'Hello, World' -H 'Content-Type: application/octet-stream' -X POST 'http
       The object sent to such endpoints may also have optional fields. What those fields are
       is to be determined.
     </p>
+    <h2>Gotchas</h2>
+    <ul>
+      <li>Requests to event streaming endpoints must have content type application/json.</li>
+      <li>Requests to message endpoints must have content type text/plain or application/octet-stream.</li>
+      <li>POST /poll will return a 404 after 5 seconds with no message.</li>
+      <li>POST /poll may return multiple messages. They're all separated by a newline.</li>
+    </ul>
     <h2>Links</h2>
     <ul>
       <li><a href="http://github.com/MooseTheGoose/xsserver">XSServer Github Link</a></li>

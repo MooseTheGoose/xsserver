@@ -23,6 +23,7 @@ namespace XSServer.Controllers {
     }
 
     [HttpPost()]
+    [Consumes("application/octet-stream", "text/plain")]
     public async Task Message([FromQuery] string key = "") {
       byte[] error = null;
       if(! ControllerUtilities.TryExtractKey(key, out key, out error)) {

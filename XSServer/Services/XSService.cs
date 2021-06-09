@@ -26,11 +26,15 @@ namespace XSServer.Services {
 
     public async Task DequeueMessages(Func<byte[], byte[]> messageMapping) {
       byte[] curr;
+      bool messageSent = false;
       while(queuedMessages.TryDequeue(out curr)) {
 	await response.Body.WriteAsync(messageMapping(curr));
 	Timestamp = Environment.TickCount;
+        messageSent = true;
       }
-      await response.Body.FlushAsync();
+      if(messageSent) {
+        await response.Body.FlushAsync();
+      }
     }
   }
 

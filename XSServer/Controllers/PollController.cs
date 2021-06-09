@@ -46,6 +46,9 @@ namespace XSServer.Controllers {
             await ControllerUtilities.PollXSServiceFuture(data, 100, PollMessageMapping);
             timestamp = Environment.TickCount;
           }
+          if(data.Timestamp == datatime) {
+            Response.StatusCode = 404;
+          }
           XSService.Unsubscribe(data);
         } catch {
           XSService.Unsubscribe(data);
