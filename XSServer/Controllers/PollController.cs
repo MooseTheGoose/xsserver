@@ -17,6 +17,7 @@ namespace XSServer.Controllers {
   public class PollController : ControllerBase {
     private readonly ILogger<PollController> _logger;
     private const int MaxPollTimeMs = 5000;
+    private const int PollInterval = 100;
 
     public PollController(ILogger<PollController> logger) {
       _logger = logger;
@@ -26,34 +27,28 @@ namespace XSServer.Controllers {
       return Encoding.ASCII.GetBytes(Convert.ToBase64String(message) + "\n");
     }
 
+    private async Task PollMainLoop(XSServiceData data, XSSubscriber sub, object webData) {
+      int datatime = data.Timestamp;
+      int timestamp = datatime;
+      HttpResponse response = (HttpResponse)webData;
+      await data.DequeueMessages();
+      while(data.Timestamp == datatime && ControllerUtilities.TimeAbsDifference(timestamp, datatime) < MaxPollTimeMs) {
+        await ControllerUtilities.PollXSServiceFuture(data, PollInterval);
+        timestamp = Environment.TickCount;
+      }
+      if(data.Timestamp == datatime) {
+        response.StatusCode = 404;
+      }
+    }
+
     [HttpPost()]
     public async Task Subscribe([FromBody]XSSubscriber sub) {
-      string key = null;
-      byte[] error = null;
-      sub.Key ??= "";
-      if(! ControllerUtilities.TryExtractKey(sub.Key, out key, out error)) {
-        Response.StatusCode = 400;
-	await Response.Body.WriteAsync(error);
-        await Response.Body.FlushAsync();
-      } else {
-        sub.Key = key;
-        XSServiceData data = XSService.Subscribe(Response, sub);
-        try {
-          int datatime = data.Timestamp;
-          int timestamp = datatime;
-          await data.DequeueMessages(PollMessageMapping);
-          while(data.Timestamp == datatime && ControllerUtilities.TimeAbsDifference(timestamp, datatime) < MaxPollTimeMs) {
-            await ControllerUtilities.PollXSServiceFuture(data, 100, PollMessageMapping);
-            timestamp = Environment.TickCount;
-          }
-          if(data.Timestamp == datatime) {
-            Response.StatusCode = 404;
-          }
-          XSService.Unsubscribe(data);
-        } catch {
-          XSService.Unsubscribe(data);
-        }
-      }
+      XSServiceCallbacks callbacks = new XSServiceCallbacks {
+        writeCallback = ControllerUtilities.WriteToResponseTaskGenerator(Response),
+        flushCallback = ControllerUtilities.FlushResponseTaskGenerator(Response),
+        messageMapping = PollMessageMapping
+      };
+      await ControllerUtilities.RunSubscriber(sub, Response, (object)Response, callbacks, PollMainLoop);
     }
 
 

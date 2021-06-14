@@ -9,14 +9,20 @@ using Microsoft.AspNetCore.Http;
 using XSServer.Models;
 
 namespace XSServer.Services {
+  public struct XSServiceCallbacks {
+    public Func<byte[], Task> writeCallback;
+    public Func<Task> flushCallback;
+    public Func<byte[], byte[]> messageMapping;
+  }
+
   public class XSServiceData {
     private ConcurrentQueue<byte[]> queuedMessages;
-    private HttpResponse response;
+    private XSServiceCallbacks callbacks;
     public int Timestamp;
 
-    public XSServiceData(HttpResponse resp) {
+    public XSServiceData(XSServiceCallbacks sessionCallbacks) {
       queuedMessages = new ConcurrentQueue<byte[]>();
-      response = resp;
+      callbacks = sessionCallbacks;
       Timestamp = Environment.TickCount;
     }
 
@@ -24,16 +30,16 @@ namespace XSServer.Services {
       queuedMessages.Enqueue(msg);
     }
 
-    public async Task DequeueMessages(Func<byte[], byte[]> messageMapping) {
+    public async Task DequeueMessages() {
       byte[] curr;
       bool messageSent = false;
       while(queuedMessages.TryDequeue(out curr)) {
-	await response.Body.WriteAsync(messageMapping(curr));
+	await callbacks.writeCallback(callbacks.messageMapping(curr));
 	Timestamp = Environment.TickCount;
         messageSent = true;
       }
       if(messageSent) {
-        await response.Body.FlushAsync();
+        await callbacks.flushCallback();
       }
     }
   }
@@ -45,8 +51,8 @@ namespace XSServer.Services {
       dataStorage = new ConcurrentDictionary<XSServiceData, XSSubscriber>();
     }
 
-    public static XSServiceData Subscribe(HttpResponse resp, XSSubscriber sub) {
-      XSServiceData newdata = new XSServiceData(resp);
+    public static XSServiceData Subscribe(XSServiceCallbacks callbacks, XSSubscriber sub) {
+      XSServiceData newdata = new XSServiceData(callbacks);
       dataStorage.GetOrAdd(newdata, sub);
       return newdata;
     }

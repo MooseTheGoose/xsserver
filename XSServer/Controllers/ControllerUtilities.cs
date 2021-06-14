@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.IO;
 using System.Text;
 using XSServer.Services;
+using XSServer.Models;
 
 namespace XSServer.Controllers {
   public static class ControllerUtilities {
@@ -36,15 +37,48 @@ namespace XSServer.Controllers {
       return success;
     }
 
-    public static async Task PollXSServiceFuture(XSServiceData data, int milliseconds, Func<byte[], byte[]> mapping) {
+    public static async Task PollXSServiceFuture(XSServiceData data, int milliseconds) {
       using(Timer futurepoll = new Timer(milliseconds)) {
-	Task future = new Task(async () => await data.DequeueMessages(mapping)); 
+	Task future = new Task(async () => await data.DequeueMessages()); 
 	futurepoll.Elapsed += (Object source, ElapsedEventArgs e) => {
 	  future.Start(); 
 	};
         futurepoll.AutoReset = false;
 	futurepoll.Start();
 	await future; 
+      }
+    }
+
+    public delegate Task SubMainLoop(XSServiceData data, XSSubscriber sub, object webData);
+
+    public static Func<byte[], Task> WriteToResponseTaskGenerator(HttpResponse response) {
+      return (byte[] message) => {
+        return response.Body.WriteAsync(message, 0, message.Length);
+      };
+    }
+
+    public static Func<Task> FlushResponseTaskGenerator(HttpResponse response) {
+      return () => { return response.Body.FlushAsync(); };
+    }
+
+    public static async Task RunSubscriber(XSSubscriber sub, HttpResponse response, 
+        object webData, XSServiceCallbacks callbacks, SubMainLoop main) {
+      string key = null;
+      byte[] error = null;
+      sub.Key ??= "";
+      if(! ControllerUtilities.TryExtractKey(sub.Key, out key, out error)) {
+        response.StatusCode = 400;
+	await response.Body.WriteAsync(error);
+        await response.Body.FlushAsync();
+      } else {
+        sub.Key = key;
+        XSServiceData data = XSService.Subscribe(callbacks, sub);
+        try {
+          await Task.Run(() => main(data, sub, webData));
+          XSService.Unsubscribe(data);
+        } catch {
+          XSService.Unsubscribe(data);
+        }
       }
     }
 
